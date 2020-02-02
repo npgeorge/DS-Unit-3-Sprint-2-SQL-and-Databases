@@ -1,0 +1,120 @@
+-- How many total Characters are there?
+/*
+SELECT count(distinct character_id) as char_count
+from charactercreator_character_inventory
+*/
+--answer: 302 ids
+
+-- How many of each specific subclass?
+/*
+select count(distinct character_ptr_id) as char_count_fighter
+from charactercreator_fighter
+*/
+--68 fighters
+/*
+SELECT count(distinct character_ptr_id) as char_count_cleric
+from charactercreator_cleric
+*/
+--75 fighters
+/*
+select count(distinct character_ptr_id) as char_count_thief
+from charactercreator_thief
+*/
+--51 thiefs
+/*
+select count(distinct character_ptr_id) as char_count_mage
+from charactercreator_mage
+*/
+--108 mages
+
+--How many total Items?
+--Items can be found in the armory_item db
+
+SELECT count(distinct item_id) as item_count
+FROM armory_item
+
+
+--how many of the items are weapons? how many are not?
+
+SELECT count(distinct item_ptr_id) as weapon_count
+FROM armory_weapon
+
+--how many are not?
+
+SELECT count(distinct item_id) as item_count
+FROM armory_item
+
+SELECT count(distinct item_ptr_id) as weapon_count
+FROM armory_weapon
+
+
+--How many weapons per character? not including characters that don't have weapons
+
+SELECT
+	cast(count(distinct inv.id) as float) / count(distinct inv.character_id) as weapons_per_char
+from charactercreator_character_inventory as inv 
+join armory_weapon aw on aw.item_ptr_id = inv.item_id
+
+
+/*
+select
+  subquery1.char_type
+  ,count(distinct subquery1.character_id) as char_count
+from (
+    -- row per character (302 total)
+    select 
+      ch.character_id
+      ,ch.name
+      ,CASE 
+      WHEN cl.character_ptr_id is not null THEN "cleric"
+      WHEN f.character_ptr_id is not null THEN "fighter"
+      WHEN n.mage_ptr_id is not null THEN "mage-necro"
+      WHEN m.character_ptr_id is not null THEN "mage"
+      WHEN th.character_ptr_id is not null THEN "thief"
+      ELSE "todo"
+      END as char_type
+    from charactercreator_character as ch
+    left join charactercreator_cleric as cl on ch.character_id = cl.character_ptr_id
+    left join charactercreator_fighter as f on ch.character_id = f.character_ptr_id
+    left join charactercreator_mage as m on ch.character_id = m.character_ptr_id
+    left join charactercreator_thief as th on ch.character_id = th.character_ptr_id
+    left join charactercreator_necromancer as n on m.character_ptr_id = n.mage_ptr_id
+) subquery1
+group by subquery1.char_type
+*/
+--subtract all_weapons from all_items
+
+SELECT
+	count(distinct armory_item.item_id) - count(distinct armory_weapon.item_ptr_id)
+FROM armory_item, armory_weapon
+
+
+--how many items does each character have? (Return first 20 rows)
+
+SELECT
+	character_id, count(character_id) as total_items
+FROM charactercreator_character_inventory
+group by character_id
+LIMIT 20
+
+--How many Weapons does each character have? (Return first 20 rows)
+
+SELECT
+	char_inv.character_id, count(character_id) as total_weapons
+FROM charactercreator_character_inventory as char_inv
+join armory_weapon as aw on aw.item_ptr_id = char_inv.item_id
+GROUP by character_id
+LIMIT 20
+
+--On average, how many Items does each Character have?
+
+SELECT 
+	cast(count(distinct item_id)AS FLOAT) / count(distinct character_id) as Avg_items_per_char
+FROM charactercreator_character_inventory as char_inv
+
+--On average, how many Weapons does each character have?
+
+SELECT
+	cast(count(distinct ifnull(item_ptr_id,NULL))AS FLOAT) / count(distinct character_id) as avg_weapons_per_char
+FROM charactercreator_character_inventory as inv
+LEFT JOIN armory_weapon as aw on aw.item_ptr_id = inv.item_id
