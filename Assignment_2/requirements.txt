@@ -1,0 +1,10 @@
+psycopg2-binary
+python-dotenv
+pandas
+
+
+#setting up virtual environment in terminal
+#conda create -n db-env python=3.7
+#conda activate db-env
+#pip install psycopg2 python-dotenv pandas
+#pip install -r requirements.txt
