@@ -110,9 +110,17 @@ print(f"This is a list of the first 20 characters and how many weapons they have
 
 #Q: On average, how many items does each character have?
 query_8 = """
-SELECT 
-	cast(count(distinct item_id)AS FLOAT) / count(distinct character_id) as Avg_items_per_char
-FROM charactercreator_character_inventory as char_inv
+SELECT
+    avg(item_count) as avg_items_per_char
+FROM (
+    SELECT
+      chars.character_id
+      ,chars."name"
+      ,count(distinct inv.item_id) as item_count 
+    FROM charactercreator_character as chars
+    LEFT JOIN charactercreator_character_inventory as inv ON chars.character_id = inv.character_id
+    GROUP BY 1,2
+) innerq
 """
 #answer
 answer_8 = curs.execute(query_8).fetchall()
@@ -121,10 +129,18 @@ print(f"On average, each character has {answer_8} items.")
 
 #Q: On average, how many weapons does each character have?
 query_9 = """
-SELECT
-	cast(count(distinct ifnull(item_ptr_id,NULL))AS FLOAT) / count(distinct character_id) as avg_weapons_per_char
-FROM charactercreator_character_inventory as inv
-LEFT JOIN armory_weapon as aw on aw.item_ptr_id = inv.item_id
+SELECT 
+    avg(weapon_count) as avg_weapons_per_char
+FROM (
+    SELECT 
+      chars.character_id
+      ,chars."name"
+      ,count(distinct aw.item_ptr_id) as weapon_count
+    FROM charactercreator_character chars
+    left join charactercreator_character_inventory inv on inv.character_id = chars.character_id
+    left join armory_weapon aw on aw.item_ptr_id = inv.item_id
+    group by 1,2
+) innerq
 """
 #answer
 answer_9 = curs.execute(query_9).fetchall()
